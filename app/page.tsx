@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 type Ejemplar = {
@@ -13,6 +16,14 @@ type Ejemplar = {
   imagenes: string[] | null;
 };
 
+const filtros = [
+  "Todos los andares",
+  "Paso Fino",
+  "Trocha",
+  "Trocha y Galope",
+  "Trote y Galope",
+];
+
 function formatPrice(value: number | null) {
   if (!value) return "Consultar";
 
@@ -23,19 +34,52 @@ function formatPrice(value: number | null) {
   }).format(value);
 }
 
-export default async function Home() {
-  const { data } = await supabase
-    .from("ejemplares")
-    .select("*")
-    .order("created_at", { ascending: false });
+export default function Home() {
+  const [ejemplares, setEjemplares] = useState<Ejemplar[]>([]);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroActivo, setFiltroActivo] = useState("Todos los andares");
 
-  const ejemplares = (data || []) as Ejemplar[];
+  useEffect(() => {
+    const cargarEjemplares = async () => {
+      const { data } = await supabase
+        .from("ejemplares")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      setEjemplares((data || []) as Ejemplar[]);
+    };
+
+    cargarEjemplares();
+  }, []);
+
+  const ejemplaresDisponibles = useMemo(() => {
+    return ejemplares.filter((ejemplar) => ejemplar.estado !== "Vendido");
+  }, [ejemplares]);
+
+  const ejemplaresFiltrados = useMemo(() => {
+    const texto = busqueda.toLowerCase().trim();
+
+    return ejemplaresDisponibles.filter((ejemplar) => {
+      const coincideBusqueda =
+        !texto ||
+        ejemplar.nombre?.toLowerCase().includes(texto) ||
+        ejemplar.ubicacion?.toLowerCase().includes(texto) ||
+        ejemplar.andar?.toLowerCase().includes(texto) ||
+        ejemplar.sexo?.toLowerCase().includes(texto);
+
+      const coincideFiltro =
+        filtroActivo === "Todos los andares" ||
+        ejemplar.andar === filtroActivo;
+
+      return coincideBusqueda && coincideFiltro;
+    });
+  }, [busqueda, filtroActivo, ejemplaresDisponibles]);
 
   return (
     <main className="min-h-screen bg-[#f8f7f3] text-[#171717]">
       <header className="border-b bg-white/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Portal Equino"
@@ -46,36 +90,33 @@ export default async function Home() {
               <h1 className="font-bold">Portal Equino</h1>
               <p className="text-xs text-gray-500">El Portal de los Mejores</p>
             </div>
-          </div>
+          </Link>
 
-          <nav className="hidden gap-8 text-sm text-gray-600 md:flex">
-            <span>Ejemplares</span>
-            <span>Criaderos</span>
-            <span>Eventos</span>
-            <span>Vendidos</span>
+          <nav className="flex gap-6 text-sm font-semibold text-gray-600">
+            <Link href="/">Ejemplares</Link>
+            <Link href="/vendidos">Vendidos</Link>
+            <Link href="/contactanos">Contáctanos</Link>
           </nav>
         </div>
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-8">
         <input
-          placeholder="Buscar por nombre, padre, madre o criadero..."
+          value={busqueda}
+          onChange={(e) => setBusqueda(e.target.value)}
+          placeholder="Buscar por nombre, ubicación, andar o sexo..."
           className="w-full rounded-2xl border bg-white px-5 py-4 shadow-sm outline-none"
         />
 
         <div className="mt-4 flex flex-wrap gap-3">
-          {[
-            "Todos los andares",
-            "Paso Fino",
-            "Trocha",
-            "Trocha y Galope",
-            "Trote y Galope",
-            "Precio · Ubicación",
-          ].map((item, index) => (
+          {filtros.map((item) => (
             <button
               key={item}
+              onClick={() => setFiltroActivo(item)}
               className={`rounded-full border px-5 py-2 text-sm shadow-sm ${
-                index === 0 ? "bg-black text-white" : "bg-white text-gray-700"
+                filtroActivo === item
+                  ? "bg-black text-white"
+                  : "bg-white text-gray-700"
               }`}
             >
               {item}
@@ -90,24 +131,23 @@ export default async function Home() {
 
           <h2 className="mt-3 text-4xl font-extrabold leading-tight md:text-5xl">
             Los mejores ejemplares, <br />
-            <span className="text-[#b68a22]">indexados para siempre.</span>
+            <span className="text-[#b68a22]">Para siempre.</span>
           </h2>
 
           <p className="mt-4 text-gray-600">
-            Busca, filtra y contacta al propietario en un toque. Sin perderse en
-            el feed.
+            Busca, filtra y contacta al propietario en un toque. 
           </p>
 
           <div className="mt-5 flex gap-5 text-sm">
             <span>
-              <b>{ejemplares.length}</b> ejemplares
+              <b>{ejemplaresFiltrados.length}</b> ejemplares
             </span>
             <span className="text-green-600">● Actualizado hoy</span>
           </div>
         </div>
 
         <section className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {ejemplares.map((ejemplar) => {
+          {ejemplaresFiltrados.map((ejemplar) => {
             const imagen =
               ejemplar.imagenes && ejemplar.imagenes.length > 0
                 ? ejemplar.imagenes[0]
@@ -131,15 +171,7 @@ export default async function Home() {
                     />
 
                     <span className="absolute left-4 top-4 rounded-lg bg-white px-3 py-1 text-xs font-semibold">
-                      <span
-                        className={
-                          ejemplar.estado === "Vendido"
-                            ? "text-red-500"
-                            : "text-green-500"
-                        }
-                      >
-                        ●
-                      </span>{" "}
+                      <span className="text-green-500">●</span>{" "}
                       {ejemplar.estado || "Disponible"}
                     </span>
 
@@ -167,7 +199,7 @@ export default async function Home() {
                 <div className="p-5">
                   <div className="border-t pt-4">
                     <p className="text-xs font-bold uppercase text-gray-400">
-                      Pedido
+                      Precio
                     </p>
 
                     <div className="mt-1 flex items-center justify-between">
@@ -188,6 +220,12 @@ export default async function Home() {
             );
           })}
         </section>
+
+        {ejemplaresFiltrados.length === 0 && (
+          <div className="mt-10 rounded-3xl border border-dashed bg-white p-10 text-center text-gray-500">
+            No se encontraron ejemplares.
+          </div>
+        )}
       </section>
     </main>
   );
