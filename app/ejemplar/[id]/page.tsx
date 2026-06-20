@@ -1,10 +1,20 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 
-type Props = {
-  params: Promise<{
-    id: string;
-  }>;
+type Ejemplar = {
+  id: string;
+  nombre: string;
+  ubicacion: string | null;
+  precio: number | null;
+  descripcion: string | null;
+  sexo: string | null;
+  andar: string | null;
+  estado: string | null;
+  imagenes: string[] | null;
 };
 
 function formatPrice(value: number | null) {
@@ -17,14 +27,46 @@ function formatPrice(value: number | null) {
   }).format(value);
 }
 
-export default async function EjemplarPage({ params }: Props) {
-  const { id } = await params;
+export default function EjemplarPage() {
+  const params = useParams();
+  const id = params.id as string;
 
-  const { data: ejemplar } = await supabase
-    .from("ejemplares")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const [ejemplar, setEjemplar] = useState<Ejemplar | null>(null);
+  const [cargando, setCargando] = useState(true);
+  const [imagenActual, setImagenActual] = useState(0);
+
+  useEffect(() => {
+    const cargarEjemplar = async () => {
+      const { data } = await supabase
+        .from("ejemplares")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      setEjemplar(data as Ejemplar);
+      setCargando(false);
+    };
+
+    if (id) cargarEjemplar();
+  }, [id]);
+
+  const imagenes = useMemo(() => {
+    if (!ejemplar?.imagenes || ejemplar.imagenes.length === 0) {
+      return ["/logo.png"];
+    }
+
+    return ejemplar.imagenes;
+  }, [ejemplar]);
+
+  if (cargando) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-[#f8f7f3] text-black">
+        <div className="animate-pulse rounded-3xl bg-white px-8 py-6 font-bold shadow">
+          Cargando ejemplar...
+        </div>
+      </main>
+    );
+  }
 
   if (!ejemplar) {
     return (
@@ -34,18 +76,25 @@ export default async function EjemplarPage({ params }: Props) {
     );
   }
 
-  const imagenes =
-    ejemplar.imagenes && ejemplar.imagenes.length > 0
-      ? ejemplar.imagenes
-      : ["/logo.png"];
-
   const whatsappUrl = `https://wa.me/573247595574?text=${encodeURIComponent(
     `Hola, estoy interesado en el ejemplar ${ejemplar.nombre}`
   )}`;
 
+  const siguienteImagen = () => {
+    setImagenActual((actual) =>
+      actual === imagenes.length - 1 ? 0 : actual + 1
+    );
+  };
+
+  const anteriorImagen = () => {
+    setImagenActual((actual) =>
+      actual === 0 ? imagenes.length - 1 : actual - 1
+    );
+  };
+
   return (
     <main className="min-h-screen bg-[#f8f7f3] text-[#171717]">
-      <header className="border-b bg-white">
+      <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-3">
             <img
@@ -72,13 +121,13 @@ export default async function EjemplarPage({ params }: Props) {
       </header>
 
       <section className="mx-auto max-w-5xl px-6 py-5">
-        <div className="grid gap-5 lg:grid-cols-[380px_1fr]">
+        <div className="animate-[fadeIn_0.4s_ease-in-out] grid gap-5 lg:grid-cols-[420px_1fr]">
           <section className="rounded-3xl border bg-white p-3 shadow-sm">
-            <div className="relative h-[300px] w-full overflow-hidden rounded-2xl bg-gray-100">
+            <div className="relative h-[330px] w-full overflow-hidden rounded-2xl bg-gray-100">
               <img
-                src={imagenes[0]}
+                src={imagenes[imagenActual]}
                 alt={ejemplar.nombre}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition duration-500"
               />
 
               <span
@@ -96,17 +145,51 @@ export default async function EjemplarPage({ params }: Props) {
                   {ejemplar.andar}
                 </span>
               )}
+
+              {imagenes.length > 1 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={anteriorImagen}
+                    className="absolute left-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl font-bold shadow"
+                  >
+                    ‹
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={siguienteImagen}
+                    className="absolute right-3 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-xl font-bold shadow"
+                  >
+                    ›
+                  </button>
+
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white">
+                    {imagenActual + 1} / {imagenes.length}
+                  </div>
+                </>
+              )}
             </div>
 
             {imagenes.length > 1 && (
               <div className="mt-3 grid grid-cols-4 gap-2">
-                {imagenes.slice(0, 4).map((img: string, index: number) => (
-                  <img
+                {imagenes.slice(0, 8).map((img: string, index: number) => (
+                  <button
+                    type="button"
                     key={img}
-                    src={img}
-                    alt={`${ejemplar.nombre} ${index + 1}`}
-                    className="h-14 w-full rounded-xl object-cover"
-                  />
+                    onClick={() => setImagenActual(index)}
+                    className={`overflow-hidden rounded-xl border-2 ${
+                      imagenActual === index
+                        ? "border-[#b68a22]"
+                        : "border-transparent"
+                    }`}
+                  >
+                    <img
+                      src={img}
+                      alt={`${ejemplar.nombre} ${index + 1}`}
+                      className="h-16 w-full object-cover"
+                    />
+                  </button>
                 ))}
               </div>
             )}
@@ -207,6 +290,16 @@ export default async function EjemplarPage({ params }: Props) {
           </section>
         </div>
       </section>
+
+      <a
+        href={whatsappUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-xl transition hover:bg-green-600"
+      >
+        <span className="text-xl">🟢</span>
+        WhatsApp
+      </a>
     </main>
   );
 }

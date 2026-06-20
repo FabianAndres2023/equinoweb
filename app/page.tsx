@@ -56,6 +56,10 @@ export default function Home() {
     return ejemplares.filter((ejemplar) => ejemplar.estado !== "Vendido");
   }, [ejemplares]);
 
+  const vendidos = useMemo(() => {
+    return ejemplares.filter((ejemplar) => ejemplar.estado === "Vendido");
+  }, [ejemplares]);
+
   const ejemplaresFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
 
@@ -77,7 +81,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-[#f8f7f3] text-[#171717]">
-      <header className="border-b bg-white/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link href="/" className="flex items-center gap-3">
             <img
@@ -87,63 +91,96 @@ export default function Home() {
             />
 
             <div>
-              <h1 className="font-bold">Portal Equino</h1>
+              <h1 className="font-bold leading-tight">Portal Equino</h1>
               <p className="text-xs text-gray-500">El Portal de los Mejores</p>
             </div>
           </Link>
 
-          <nav className="flex gap-6 text-sm font-semibold text-gray-600">
-            <Link href="/">Ejemplares</Link>
-            <Link href="/vendidos">Vendidos</Link>
-            <Link href="/contactanos">Contáctanos</Link>
+          <nav className="flex gap-3 text-xs font-semibold text-gray-600 md:gap-6 md:text-sm">
+            <Link className="hover:text-black" href="/">
+              Ejemplares
+            </Link>
+            <Link className="hover:text-black" href="/vendidos">
+              Vendidos
+            </Link>
+            <Link className="hover:text-black" href="/contactanos">
+              Contáctanos
+            </Link>
           </nav>
         </div>
       </header>
 
       <section className="mx-auto max-w-6xl px-6 py-8">
-        <input
-          value={busqueda}
-          onChange={(e) => setBusqueda(e.target.value)}
-          placeholder="Buscar por nombre, ubicación, andar o sexo..."
-          className="w-full rounded-2xl border bg-white px-5 py-4 shadow-sm outline-none"
-        />
+        <div className="rounded-[2rem] bg-white p-5 shadow-sm">
+          <input
+            value={busqueda}
+            onChange={(e) => setBusqueda(e.target.value)}
+            placeholder="Buscar por nombre, ubicación, andar o sexo..."
+            className="w-full rounded-2xl border bg-white px-5 py-4 shadow-sm outline-none transition focus:border-[#b68a22] focus:ring-4 focus:ring-[#b68a22]/10"
+          />
 
-        <div className="mt-4 flex flex-wrap gap-3">
-          {filtros.map((item) => (
-            <button
-              key={item}
-              onClick={() => setFiltroActivo(item)}
-              className={`rounded-full border px-5 py-2 text-sm shadow-sm ${
-                filtroActivo === item
-                  ? "bg-black text-white"
-                  : "bg-white text-gray-700"
-              }`}
-            >
-              {item}
-            </button>
-          ))}
+          <div className="mt-4 flex flex-wrap gap-3">
+            {filtros.map((item) => (
+              <button
+                key={item}
+                onClick={() => setFiltroActivo(item)}
+                className={`rounded-full border px-5 py-2 text-sm shadow-sm transition ${
+                  filtroActivo === item
+                    ? "bg-black text-white"
+                    : "bg-white text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-10">
-          <p className="text-sm font-bold uppercase tracking-widest text-[#b68a22]">
-            Vitrina · Caballo Criollo
-          </p>
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+          <div>
+            <p className="text-sm font-bold uppercase tracking-widest text-[#b68a22]">
+              Vitrina · Caballo Criollo
+            </p>
 
-          <h2 className="mt-3 text-4xl font-extrabold leading-tight md:text-5xl">
-            Los mejores ejemplares, <br />
-            <span className="text-[#b68a22]">Para siempre.</span>
-          </h2>
+            <h2 className="mt-3 text-3xl font-extrabold leading-tight md:text-6xl">
+              Los mejores ejemplares, <br />
+              <span className="text-[#b68a22]">para siempre.</span>
+            </h2>
 
-          <p className="mt-4 text-gray-600">
-            Busca, filtra y contacta al propietario en un toque. 
-          </p>
-
-          <div className="mt-5 flex gap-5 text-sm">
-            <span>
-              <b>{ejemplaresFiltrados.length}</b> ejemplares
-            </span>
-            <span className="text-green-600">● Actualizado hoy</span>
+            <p className="mt-4 max-w-2xl text-gray-600">
+              Busca, filtra y contacta al propietario en un toque.
+            </p>
           </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-3xl bg-white p-5 shadow-sm">
+              <p className="text-xs font-bold uppercase text-gray-400">
+                Disponibles
+              </p>
+              <h3 className="mt-2 text-3xl font-extrabold text-green-600">
+                {ejemplaresDisponibles.length}
+              </h3>
+            </div>
+
+            <Link
+              href="/vendidos"
+              className="rounded-3xl bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            >
+              <p className="text-xs font-bold uppercase text-gray-400">
+                Vendidos
+              </p>
+              <h3 className="mt-2 text-3xl font-extrabold text-red-600">
+                {vendidos.length}
+              </h3>
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-5 flex gap-5 text-sm">
+          <span>
+            <b>{ejemplaresFiltrados.length}</b> resultados
+          </span>
+          <span className="text-green-600">● Actualizado hoy</span>
         </div>
 
         <section className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -180,6 +217,10 @@ export default function Home() {
                         {ejemplar.andar}
                       </span>
                     )}
+
+                    <span className="absolute bottom-4 left-4 rounded-xl bg-black/80 px-4 py-2 text-xs font-bold text-white">
+                      Ver detalle
+                    </span>
                   </div>
 
                   <div className="p-5 pb-0">
@@ -209,7 +250,7 @@ export default function Home() {
                         href={whatsappUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="rounded-xl bg-green-500 px-4 py-2 text-sm font-bold text-white"
+                        className="rounded-xl bg-green-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-600"
                       >
                         WhatsApp
                       </a>
@@ -227,6 +268,41 @@ export default function Home() {
           </div>
         )}
       </section>
+
+      <footer className="mt-20 border-t bg-white">
+        <div className="mx-auto max-w-6xl px-6 py-10 text-center">
+          <img
+            src="/logo.png"
+            alt="Portal Equino"
+            className="mx-auto h-16 w-16 rounded-full object-cover"
+          />
+
+          <h3 className="mt-3 text-lg font-bold">Portal Equino</h3>
+
+          <p className="mt-2 text-sm text-gray-500">
+            El Portal de los Mejores Ejemplares Criollos Colombianos.
+          </p>
+
+          <div className="mt-4 flex justify-center gap-6 text-sm font-semibold text-gray-600">
+            <Link href="/">Ejemplares</Link>
+            <Link href="/vendidos">Vendidos</Link>
+            <Link href="/contactanos">Contáctanos</Link>
+          </div>
+
+          <p className="mt-6 text-xs text-gray-400">
+            © 2026 Portal Equino. Todos los derechos reservados.
+          </p>
+        </div>
+      </footer>
+
+      <a
+        href="https://wa.me/573247595574"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-6 right-6 z-50 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-xl transition hover:bg-green-600"
+      >
+        WhatsApp
+      </a>
     </main>
   );
 }
