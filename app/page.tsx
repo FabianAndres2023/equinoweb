@@ -9,6 +9,7 @@ type Ejemplar = {
   nombre: string;
   ubicacion: string | null;
   precio: number | null;
+  edad: string | null;
   descripcion: string | null;
   sexo: string | null;
   andar: string | null;
@@ -52,6 +53,13 @@ export default function Home() {
     cargarEjemplares();
   }, []);
 
+  const bajarAEjemplares = () => {
+    document.getElementById("ejemplares")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  };
+
   const ejemplaresDisponibles = useMemo(() => {
     return ejemplares.filter((ejemplar) => ejemplar.estado !== "Vendido");
   }, [ejemplares]);
@@ -60,16 +68,26 @@ export default function Home() {
     return ejemplares.filter((ejemplar) => ejemplar.estado === "Vendido");
   }, [ejemplares]);
 
+  const ejemplaresOrdenados = useMemo(() => {
+    return [...ejemplares].sort((a, b) => {
+      if (a.estado === "Vendido" && b.estado !== "Vendido") return 1;
+      if (a.estado !== "Vendido" && b.estado === "Vendido") return -1;
+      return 0;
+    });
+  }, [ejemplares]);
+
   const ejemplaresFiltrados = useMemo(() => {
     const texto = busqueda.toLowerCase().trim();
 
-    return ejemplaresDisponibles.filter((ejemplar) => {
+    return ejemplaresOrdenados.filter((ejemplar) => {
       const coincideBusqueda =
         !texto ||
         ejemplar.nombre?.toLowerCase().includes(texto) ||
         ejemplar.ubicacion?.toLowerCase().includes(texto) ||
         ejemplar.andar?.toLowerCase().includes(texto) ||
-        ejemplar.sexo?.toLowerCase().includes(texto);
+        ejemplar.sexo?.toLowerCase().includes(texto) ||
+        ejemplar.edad?.toLowerCase().includes(texto) ||
+        ejemplar.estado?.toLowerCase().includes(texto);
 
       const coincideFiltro =
         filtroActivo === "Todos los andares" ||
@@ -77,13 +95,13 @@ export default function Home() {
 
       return coincideBusqueda && coincideFiltro;
     });
-  }, [busqueda, filtroActivo, ejemplaresDisponibles]);
+  }, [busqueda, filtroActivo, ejemplaresOrdenados]);
 
   return (
-    <main className="min-h-screen bg-[#f8f7f3] text-[#171717]">
+    <main className="min-h-screen scroll-smooth bg-[#f8f7f3] text-[#171717]">
       <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <Link href="/" className="flex items-center gap-3">
+          <Link href="/contactanos" className="flex items-center gap-3">
             <img
               src="/logo.png"
               alt="Portal Equino"
@@ -97,12 +115,18 @@ export default function Home() {
           </Link>
 
           <nav className="flex gap-3 text-xs font-semibold text-gray-600 md:gap-6 md:text-sm">
-            <Link className="hover:text-black" href="/">
+            <button
+              type="button"
+              onClick={bajarAEjemplares}
+              className="hover:text-black"
+            >
               Ejemplares
-            </Link>
+            </button>
+
             <Link className="hover:text-black" href="/vendidos">
               Vendidos
             </Link>
+
             <Link className="hover:text-black" href="/contactanos">
               Contáctanos
             </Link>
@@ -115,7 +139,7 @@ export default function Home() {
           <input
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por nombre, ubicación, andar o sexo..."
+            placeholder="Buscar por nombre, ubicación, edad, andar, sexo o estado..."
             className="w-full rounded-2xl border bg-white px-5 py-4 shadow-sm outline-none transition focus:border-[#b68a22] focus:ring-4 focus:ring-[#b68a22]/10"
           />
 
@@ -176,91 +200,147 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-5 flex gap-5 text-sm">
-          <span>
-            <b>{ejemplaresFiltrados.length}</b> resultados
-          </span>
-          <span className="text-green-600">● Actualizado hoy</span>
-        </div>
+        <div id="ejemplares" className="scroll-mt-28">
+          <div className="mt-5 flex gap-5 text-sm">
+            <span>
+              <b>{ejemplaresFiltrados.length}</b> resultados
+            </span>
+            <span className="text-green-600">● Actualizado hoy</span>
+          </div>
 
-        <section className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {ejemplaresFiltrados.map((ejemplar) => {
-            const imagen =
-              ejemplar.imagenes && ejemplar.imagenes.length > 0
-                ? ejemplar.imagenes[0]
-                : "/logo.png";
+          <section className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {ejemplaresFiltrados.map((ejemplar) => {
+              const imagen =
+                ejemplar.imagenes && ejemplar.imagenes.length > 0
+                  ? ejemplar.imagenes[0]
+                  : "/logo.png";
 
-            const whatsappUrl = `https://wa.me/573247595574?text=${encodeURIComponent(
-              `Hola, estoy interesado en el ejemplar ${ejemplar.nombre}`
-            )}`;
+              const esVendido = ejemplar.estado === "Vendido";
 
-            return (
-              <article
-                key={ejemplar.id}
-                className="overflow-hidden rounded-3xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg"
-              >
-                <Link href={`/ejemplar/${ejemplar.id}`} className="block">
-                  <div className="relative h-64 bg-gray-100">
-                    <img
-                      src={imagen}
-                      alt={ejemplar.nombre}
-                      className="h-full w-full object-cover"
-                    />
+              const whatsappUrl = `https://wa.me/573247595574?text=${encodeURIComponent(
+                `Hola, estoy interesado en el ejemplar ${ejemplar.nombre}`
+              )}`;
 
-                    <span className="absolute left-4 top-4 rounded-lg bg-white px-3 py-1 text-xs font-semibold">
-                      <span className="text-green-500">●</span>{" "}
-                      {ejemplar.estado || "Disponible"}
-                    </span>
+              return (
+                <article
+                  key={ejemplar.id}
+                  className={`overflow-hidden rounded-3xl border bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-lg ${
+                    esVendido ? "opacity-90" : ""
+                  }`}
+                >
+                  <Link href={`/ejemplar/${ejemplar.id}`} className="block">
+                    <div className="relative h-64 bg-gray-100">
+                      <img
+                        src={imagen}
+                        alt={ejemplar.nombre}
+                        className={`h-full w-full object-cover ${
+                          esVendido ? "grayscale" : ""
+                        }`}
+                      />
 
-                    {ejemplar.andar && (
-                      <span className="absolute right-4 top-4 rounded-lg bg-[#fff3c4] px-3 py-1 text-xs font-semibold text-[#8a6a12]">
-                        {ejemplar.andar}
-                      </span>
-                    )}
-
-                    <span className="absolute bottom-4 left-4 rounded-xl bg-black/80 px-4 py-2 text-xs font-bold text-white">
-                      Ver detalle
-                    </span>
-                  </div>
-
-                  <div className="p-5 pb-0">
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="text-lg font-bold">{ejemplar.nombre}</h3>
-                      <span className="text-sm text-gray-500">
-                        {ejemplar.sexo}
-                      </span>
-                    </div>
-
-                    <p className="mt-2 text-sm text-gray-500">
-                      📍 {ejemplar.ubicacion || "Sin ubicación"}
-                    </p>
-                  </div>
-                </Link>
-
-                <div className="p-5">
-                  <div className="border-t pt-4">
-                    <p className="text-xs font-bold uppercase text-gray-400">
-                      Precio
-                    </p>
-
-                    <div className="mt-1 flex items-center justify-between">
-                      <strong>{formatPrice(ejemplar.precio)}</strong>
-
-                      <a
-                        href={whatsappUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-xl bg-green-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-600"
+                      <span
+                        className={`absolute left-4 top-4 rounded-lg px-3 py-1 text-xs font-bold ${
+                          esVendido
+                            ? "bg-red-100 text-red-700"
+                            : "bg-white text-gray-700"
+                        }`}
                       >
-                        WhatsApp
-                      </a>
+                        <span
+                          className={
+                            esVendido ? "text-red-500" : "text-green-500"
+                          }
+                        >
+                          ●
+                        </span>{" "}
+                        {esVendido
+                          ? "VENDIDO"
+                          : ejemplar.estado || "Disponible"}
+                      </span>
+
+                      {ejemplar.andar && (
+                        <span className="absolute right-4 top-4 rounded-lg bg-[#fff3c4] px-3 py-1 text-xs font-semibold text-[#8a6a12]">
+                          {ejemplar.andar}
+                        </span>
+                      )}
+
+                      <span className="absolute bottom-4 left-4 rounded-xl bg-black/80 px-4 py-2 text-xs font-bold text-white">
+                        Ver detalle
+                      </span>
+                    </div>
+
+                    <div className="p-5 pb-0">
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="text-lg font-bold">
+                          {ejemplar.nombre}
+                        </h3>
+                        <span className="text-sm text-gray-500">
+                          {ejemplar.sexo}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {ejemplar.edad && (
+                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                            Edad: {ejemplar.edad}
+                          </span>
+                        )}
+
+                        {ejemplar.andar && (
+                          <span className="rounded-full bg-[#fff3c4] px-3 py-1 text-xs font-bold text-[#8a6a12]">
+                            {ejemplar.andar}
+                          </span>
+                        )}
+
+                        {ejemplar.sexo && (
+                          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-gray-700">
+                            {ejemplar.sexo}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-3 text-sm text-gray-500">
+                        📍 {ejemplar.ubicacion || "Sin ubicación"}
+                      </p>
+                    </div>
+                  </Link>
+
+                  <div className="p-5">
+                    <div className="border-t pt-4">
+                      <p className="text-xs font-bold uppercase text-gray-400">
+                        Precio
+                      </p>
+
+                      <div className="mt-1 flex items-center justify-between gap-3">
+                        <strong>
+                          {esVendido
+                            ? "Vendido"
+                            : formatPrice(ejemplar.precio)}
+                        </strong>
+
+                        {!esVendido && (
+                          <a
+                            href={whatsappUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="rounded-xl bg-green-500 px-4 py-2 text-sm font-bold text-white transition hover:bg-green-600"
+                          >
+                            WhatsApp
+                          </a>
+                        )}
+
+                        {esVendido && (
+                          <span className="rounded-xl bg-red-100 px-4 py-2 text-sm font-bold text-red-700">
+                            No disponible
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
-            );
-          })}
-        </section>
+                </article>
+              );
+            })}
+          </section>
+        </div>
 
         {ejemplaresFiltrados.length === 0 && (
           <div className="mt-10 rounded-3xl border border-dashed bg-white p-10 text-center text-gray-500">
@@ -284,7 +364,14 @@ export default function Home() {
           </p>
 
           <div className="mt-4 flex justify-center gap-6 text-sm font-semibold text-gray-600">
-            <Link href="/">Ejemplares</Link>
+            <button
+              type="button"
+              onClick={bajarAEjemplares}
+              className="hover:text-black"
+            >
+              Ejemplares
+            </button>
+
             <Link href="/vendidos">Vendidos</Link>
             <Link href="/contactanos">Contáctanos</Link>
           </div>
@@ -299,7 +386,7 @@ export default function Home() {
         href="https://wa.me/573247595574"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-xl transition hover:bg-green-600"
+        className="fixed bottom-20 right-5 z-30 rounded-full bg-green-500 px-4 py-3 text-sm font-bold text-white shadow-xl transition hover:bg-green-600 md:bottom-6 md:right-6 md:z-50 md:px-5 md:py-4"
       >
         WhatsApp
       </a>

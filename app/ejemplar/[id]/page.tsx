@@ -10,6 +10,7 @@ type Ejemplar = {
   nombre: string;
   ubicacion: string | null;
   precio: number | null;
+  edad: string | null;
   descripcion: string | null;
   sexo: string | null;
   andar: string | null;
@@ -93,7 +94,7 @@ export default function EjemplarPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#f8f7f3] text-[#171717]">
+    <main className="min-h-screen bg-[#f8f7f3] pb-24 text-[#171717] md:pb-0">
       <header className="sticky top-0 z-40 border-b bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
           <Link href="/" className="flex items-center gap-3">
@@ -200,7 +201,7 @@ export default function EjemplarPage() {
               Ficha del ejemplar
             </p>
 
-            <div className="mt-2 flex items-start justify-between gap-4 border-b pb-4">
+            <div className="mt-2 flex flex-col gap-4 border-b pb-4 md:flex-row md:items-start md:justify-between">
               <div>
                 <h2 className="text-3xl font-extrabold leading-tight">
                   {ejemplar.nombre}
@@ -211,7 +212,7 @@ export default function EjemplarPage() {
                 </p>
               </div>
 
-              <div className="min-w-[140px] rounded-2xl bg-[#f8f7f3] px-4 py-3 text-right">
+              <div className="rounded-2xl bg-[#f8f7f3] px-4 py-3 md:min-w-[140px] md:text-right">
                 <p className="text-[10px] font-bold uppercase text-gray-400">
                   Precio
                 </p>
@@ -234,6 +235,15 @@ export default function EjemplarPage() {
 
               <div className="rounded-2xl bg-[#f8f7f3] p-3">
                 <p className="text-[10px] font-bold uppercase text-gray-400">
+                  Edad
+                </p>
+                <p className="mt-1 text-sm font-bold">
+                  {ejemplar.edad || "No registrada"}
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-[#f8f7f3] p-3">
+                <p className="text-[10px] font-bold uppercase text-gray-400">
                   Andar
                 </p>
                 <p className="mt-1 text-sm font-bold">
@@ -250,7 +260,7 @@ export default function EjemplarPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#f8f7f3] p-3">
+              <div className="rounded-2xl bg-[#f8f7f3] p-3 md:col-span-2">
                 <p className="text-[10px] font-bold uppercase text-gray-400">
                   Ubicación
                 </p>
@@ -295,9 +305,9 @@ export default function EjemplarPage() {
         href={whatsappUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 rounded-full bg-green-500 px-5 py-4 font-bold text-white shadow-xl transition hover:bg-green-600"
+        className="fixed bottom-4 right-4 z-30 flex items-center gap-2 rounded-full bg-green-500 px-4 py-3 text-sm font-bold text-white shadow-xl transition hover:bg-green-600 md:bottom-6 md:right-6 md:z-50 md:px-5 md:py-4"
       >
-        <span className="text-xl">🟢</span>
+        <span className="text-lg">🟢</span>
         WhatsApp
       </a>
     </main>

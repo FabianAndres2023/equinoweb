@@ -9,6 +9,7 @@ type Ejemplar = {
   nombre: string;
   ubicacion: string | null;
   precio: number | null;
+  edad: string | null;
   descripcion: string | null;
   sexo: string | null;
   andar: string | null;
@@ -46,6 +47,7 @@ export default function AdminPage() {
     nombre: "",
     ubicacion: "",
     precio: "",
+    edad: "",
     descripcion: "",
     sexo: "",
     andar: "",
@@ -62,7 +64,8 @@ export default function AdminPage() {
         ejemplar.nombre?.toLowerCase().includes(texto) ||
         ejemplar.ubicacion?.toLowerCase().includes(texto) ||
         ejemplar.andar?.toLowerCase().includes(texto) ||
-        ejemplar.estado?.toLowerCase().includes(texto)
+        ejemplar.estado?.toLowerCase().includes(texto) ||
+        ejemplar.edad?.toLowerCase().includes(texto)
       );
     });
   }, [busqueda, ejemplares]);
@@ -108,6 +111,7 @@ export default function AdminPage() {
       nombre: "",
       ubicacion: "",
       precio: "",
+      edad: "",
       descripcion: "",
       sexo: "",
       andar: "",
@@ -182,6 +186,7 @@ export default function AdminPage() {
     const payload = {
       ...form,
       precio: form.precio ? Number(form.precio) : null,
+      edad: form.edad || null,
       imagenes,
     };
 
@@ -221,6 +226,7 @@ export default function AdminPage() {
       nombre: ejemplar.nombre || "",
       ubicacion: ubicacionGuardada,
       precio: ejemplar.precio ? String(ejemplar.precio) : "",
+      edad: ejemplar.edad || "",
       descripcion: ejemplar.descripcion || "",
       sexo: ejemplar.sexo || "",
       andar: ejemplar.andar || "",
@@ -437,6 +443,14 @@ export default function AdminPage() {
               )}
             </div>
 
+            <input
+              className="rounded-xl border p-3"
+              name="edad"
+              placeholder="Edad. Ej: 3 años, 18 meses, 5 años"
+              value={form.edad}
+              onChange={handleChange}
+            />
+
             <select
               className="rounded-xl border p-3"
               name="sexo"
@@ -568,7 +582,7 @@ export default function AdminPage() {
 
             <input
               type="text"
-              placeholder="Buscar por nombre, ubicación, andar o estado..."
+              placeholder="Buscar por nombre, ubicación, edad, andar o estado..."
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
               className="mt-5 w-full rounded-xl border p-3"
@@ -601,6 +615,12 @@ export default function AdminPage() {
                         >
                           {ejemplar.estado || "Disponible"}
                         </span>
+
+                        {ejemplar.edad && (
+                          <span className="rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-700">
+                            Edad: {ejemplar.edad}
+                          </span>
+                        )}
 
                         {ejemplar.andar && (
                           <span className="rounded-full bg-[#fff3c4] px-3 py-1 text-xs font-bold text-[#8a6a12]">
