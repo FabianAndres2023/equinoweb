@@ -202,8 +202,8 @@ export default function EjemplarPage() {
             </p>
 
             <div className="mt-2 flex flex-col gap-4 border-b pb-4 md:flex-row md:items-start md:justify-between">
-              <div>
-                <h2 className="text-3xl font-extrabold leading-tight">
+              <div className="min-w-0 flex-1">
+                <h2 className="break-words text-3xl font-extrabold leading-tight">
                   {ejemplar.nombre}
                 </h2>
 
@@ -212,12 +212,12 @@ export default function EjemplarPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl bg-[#f8f7f3] px-4 py-3 md:min-w-[140px] md:text-right">
-                <p className="text-[10px] font-bold uppercase text-gray-400">
+              <div className="w-full rounded-2xl bg-[#f8f7f3] px-5 py-4 md:w-auto md:min-w-[240px] md:max-w-[300px] md:flex-shrink-0">
+                <p className="text-left text-[10px] font-bold uppercase text-gray-400 md:text-right">
                   Precio
                 </p>
 
-                <h3 className="text-2xl font-extrabold text-[#b68a22]">
+                <h3 className="mt-1 break-words text-left text-xl font-extrabold leading-tight text-[#b68a22] sm:text-2xl md:text-right">
                   {formatPrice(ejemplar.precio)}
                 </h3>
               </div>
